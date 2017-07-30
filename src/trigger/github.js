@@ -10,7 +10,7 @@ const githubPushEventTrigger = flows => async (ctx, next) => {
   if (ctx.request.header['x-github-event'] !== 'push') return next()
 
   const json = JSON.parse(ctx.request.body.payload)
-  const refBranch = json.ref.split('/').shift()
+  const refBranch = json.ref.split('/').pop()
 
   for (let flow of flows) {
     if (flow.trigger !== 'github') continue
@@ -30,6 +30,8 @@ const githubPushEventTrigger = flows => async (ctx, next) => {
     await next()
     return executeHander(flow)
   }
+
+  return next()
 }
 
 module.exports = githubPushEventTrigger

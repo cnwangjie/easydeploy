@@ -1,8 +1,4 @@
-const {pull} = require('./../git.js')
-
-const solver = {
-  pull: gitpull
-}
+const {pull} = require('./git.js')
 
 /**
  * @function executeHander
@@ -32,9 +28,13 @@ const gitPull = (flow) => {
   if ('git_remote_branch' in config)
     opt.remote_branch = config.git_remote_branch
 
-  return git.pull(config.deploy_path, opt)
+  return pull(config.deploy_path, opt)
     .then(out => console.log(out.map(i => i ? i.toString() : i).join('')))
     .catch(err => console.log(err))
+}
+
+const solver = {
+  pull: gitPull
 }
 
 module.exports = {

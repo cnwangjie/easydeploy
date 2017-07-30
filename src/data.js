@@ -27,7 +27,6 @@ const createLocalStorageData = (file) => {
         if (typeof value === 'object') {
           value = watchData(value)
         }
-        console.log(`set ${propertyKey} : ${value}`)
         return Reflect.set(target, propertyKey, value, receiver)
           && writeFile()
       },
