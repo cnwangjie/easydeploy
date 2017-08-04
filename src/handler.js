@@ -1,40 +1,43 @@
-const {pull} = require('./git.js')
+const _ = require('lodash')
+const fs = require('fs')
+const path = require('path')
 
 /**
  * @function executeHander
  * @return resolved promise
  */
 const executeHander = async (flow) => {
-  const handlers = flow.handle instanceof Array ? flow.handle : [flow.handle]
+  const handlers = _.isArray(flow.handler) ? flow.handler : [flow.handler]
 
-  for (let handle of handlers) {
-    await solver[handle](flow)
+  const _flow = _.cloneDeep(flow)
+
+  _flow.log = []
+
+  for (let handler of handlers) {
+    await solveHander(handler.type)(_flow, handler)
   }
+
+  const logFileName = `${_flow.name}.${Date.now()}.json`
+  const logFilePath = path.join(global.FLOW_PATH, logFileName)
+  fs.writeFileSync(logFilePath, JSON.stringify(_flow))
+  console.log(logFilePath)
 
   return new Promise((r) => r())
 }
 
 /**
- * @function gitPull
+ * @function solveHander
  * @private
+ * @description solve handle type
+ * @param {String} handler identity of one handler
+ * @return {Function} method of the handler
  */
-const gitPull = (flow) => {
-  const config = flow.config
-  const opt = { key_path: config.git_ssh_key_path }
-
-  if ('git_remote' in config)
-    opt.remote = config.git_remote
-
-  if ('git_remote_branch' in config)
-    opt.remote_branch = config.git_remote_branch
-
-  return pull(config.deploy_path, opt)
-    .then(out => console.log(out.map(i => i ? i.toString() : i).join('')))
-    .catch(err => console.log(err))
-}
-
-const solver = {
-  pull: gitPull
+const solveHander = handler => {
+  const parts = handler.split('.')
+  const method = parts.pop()
+  const module = './handler/' + parts.join('/') + '.js'
+  const fn = require(module)[method]
+  return fn
 }
 
 module.exports = {
